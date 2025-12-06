@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package com.smartcity.emergencygrpc;
+
+option java_multiple_files = true;
+option java_package = "com.smartcity.emergencygrpc.stubs";
+
+
+service EmergencyService {
+
+  rpc StreamVehiclePositions (Empty) returns (stream VehiclePosition);
+
+  rpc SendEmergencyAlert (EmergencyAlert) returns (Ack);
+}
+
+
+message Empty {}
+
+message VehiclePosition {
+  string vehicleId = 1;
+  string line = 2;
+  string zone = 3;
+  double latitude = 4;
+  double longitude = 5;
+  int64 timestamp = 6;
+}
+
+message EmergencyAlert {
+  string alertId = 1;
+  string type = 2;
+  string description = 3;
+  string zone = 4;
+  int64 timestamp = 5;
+}
+
+message Ack {
+  string status = 1;
+  string message = 2;
+}
+
