@@ -20,11 +20,16 @@ public class AirQualityServiceImpl implements AirQualityService {
 
     @Override
     public AirQualityData getAirQualityByZone(String zone) {
+
+        if (zone == null || zone.isBlank()) {
+            return new AirQualityData("UNKNOWN", -1, 0, 0, 0);
+        }
+
         AirQualityData data = DATA.get(zone.toUpperCase());
         if (data == null) {
-            // zone inconnue → renvoie un objet avec AQI -1
             return new AirQualityData(zone, -1, 0, 0, 0);
         }
         return data;
     }
+
 }
