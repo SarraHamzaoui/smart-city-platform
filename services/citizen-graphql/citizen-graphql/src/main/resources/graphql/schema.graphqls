@@ -1,0 +1,20 @@
+type Query {
+    servicesByZone(zone: String!): [CityService!]!
+    zoneOverview(zone: String!): ZoneOverview!
+}
+
+type CityService {
+    id: ID!
+    name: String!
+    type: String!
+    zone: String!
+    openNow: Boolean!
+}
+
+type ZoneOverview {
+    zone: String!
+    population: Int!
+    serviceCount: Int!
+    hasHospital: Boolean!
+    hasMetro: Boolean!
+}
