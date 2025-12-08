@@ -1,0 +1,17 @@
+server:
+  port: 8087
+
+spring:
+  cloud:
+    gateway:
+      routes:
+
+        - id: orchestrator-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/orchestrator/**
+
+        - id: mobility-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/mobility/**
