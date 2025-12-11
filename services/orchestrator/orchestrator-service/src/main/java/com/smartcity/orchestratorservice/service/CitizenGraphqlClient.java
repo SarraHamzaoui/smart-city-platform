@@ -47,10 +47,8 @@ public class CitizenGraphqlClient {
                 .bodyToMono(GraphqlResponse.class)
                 .block();
 
-        if (response == null || response.getData() == null) {
-            return null;
-        }
-
-        return response.getData().getZoneOverview();
+        return (response != null && response.getData() != null)
+                ? response.getData().getZoneOverview()
+                : null;
     }
 }

@@ -25,21 +25,27 @@ function App() {
     // 🔴 Signaler un incident pour la zone sélectionnée
     async function sendEmergency() {
         try {
-            await api.post("/orchestrator/alerts", {
+            const res = await api.post("/orchestrator/alerts", {
                 type: "fire",
                 zone,
                 description: `Alerte citoyenne déclarée dans la zone ${zone}`
             });
+
+            console.log("Réponse POST /orchestrator/alerts:", res.status, res.data);
             alert("Alerte transmise !");
-            // on recharge les données pour voir l'incident dans la liste
-            if (data) {
-                fetchData();
-            }
+
+            // Toujours rafraîchir l'affichage des données (pour voir l'alerte)
+            await fetchData();
         } catch (e) {
-            console.error(e);
+            console.error("Erreur sendEmergency:", e);
+            // si le serveur renvoie un body d'erreur on peut l'afficher :
+            if (e.response && e.response.data) {
+                console.error("Body erreur serveur:", e.response.data);
+            }
             alert("Impossible d'envoyer l'alerte");
         }
     }
+
 
     const air = data?.airQuality;
     const analytics = data?.analytics;

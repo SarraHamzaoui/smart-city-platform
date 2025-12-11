@@ -5,16 +5,20 @@ import com.smartcity.emergencygrpc.stubs.EmergencyAlert;
 import com.smartcity.emergencygrpc.stubs.EmergencyServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+@Service
 public class EmergencyGrpcClient {
 
-    private final ManagedChannel channel;
     private final EmergencyServiceGrpc.EmergencyServiceBlockingStub blockingStub;
+    private final List<IncidentDto> storedAlerts = new ArrayList<>();
 
     public EmergencyGrpcClient() {
-        this.channel = ManagedChannelBuilder
+        ManagedChannel channel = ManagedChannelBuilder
                 .forAddress("localhost", 9090)
                 .usePlaintext()
                 .build();
@@ -22,21 +26,57 @@ public class EmergencyGrpcClient {
         this.blockingStub = EmergencyServiceGrpc.newBlockingStub(channel);
     }
 
+    public Ack sendEmergencyAlert(String zone, String description) {
+        try {
+            EmergencyAlert alert = EmergencyAlert.newBuilder()
+                    .setAlertId("local-" + System.currentTimeMillis())
+                    .setZone(zone)
+                    .setType("MANUAL")
+                    .setDescription(description == null ? "" : description)
+                    .setTimestamp(System.currentTimeMillis())
+                    .build();
 
-    public Ack sendZoneInquiry(String zone) {
+            Ack ack = blockingStub.sendEmergencyAlert(alert);
 
-        EmergencyAlert alert = EmergencyAlert.newBuilder()
-                .setAlertId("check-" + zone)
-                .setType("ZONE_INQUIRY")
-                .setDescription("Requesting emergency status for zone")
-                .setZone(zone)
-                .setTimestamp(System.currentTimeMillis())
-                .build();
+            // garder copie simple -> IncidentDto (pour sérialisation JSON côté orchestrateur)
+            storedAlerts.add(new IncidentDto(
+                    alert.getAlertId(),
+                    alert.getZone(),
+                    alert.getType(),
+                    alert.getDescription(),
+                    alert.getTimestamp()
+            ));
 
-        return blockingStub.sendEmergencyAlert(alert);
+            return ack;
+        } catch (Exception e) {
+            return Ack.newBuilder()
+                    .setStatus("ERROR")
+                    .setMessage("gRPC unavailable: " + e.getMessage())
+                    .build();
+        }
     }
 
-    public void shutdown() {
-        channel.shutdown();
+    public Ack sendZoneInquiry(String zone) {
+        try {
+            EmergencyAlert alert = EmergencyAlert.newBuilder()
+                    .setAlertId("inq-" + zone + "-" + System.currentTimeMillis())
+                    .setZone(zone)
+                    .setType("INQUIRY")
+                    .setDescription("Route inquiry")
+                    .setTimestamp(System.currentTimeMillis())
+                    .build();
+
+            Ack ack = blockingStub.sendEmergencyAlert(alert);
+            return ack;
+        } catch (Exception e) {
+            return Ack.newBuilder()
+                    .setStatus("ERROR")
+                    .setMessage("Emergency service offline")
+                    .build();
+        }
+    }
+
+    public List<IncidentDto> getActiveAlerts() {
+        return Collections.unmodifiableList(storedAlerts);
     }
 }
