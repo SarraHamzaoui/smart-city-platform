@@ -14,12 +14,16 @@ import java.util.List;
 @Service
 public class EmergencyGrpcClient {
 
+    private final ManagedChannel channel;
     private final EmergencyServiceGrpc.EmergencyServiceBlockingStub blockingStub;
     private final List<IncidentDto> storedAlerts = new ArrayList<>();
 
     public EmergencyGrpcClient() {
-        ManagedChannel channel = ManagedChannelBuilder
-                .forAddress("localhost", 9090)
+        // Dynamic host configuration: check env var, default to localhost
+        String host = System.getenv("EMERGENCY_HOST") != null ? System.getenv("EMERGENCY_HOST") : "localhost";
+
+        this.channel = ManagedChannelBuilder
+                .forAddress(host, 9090)
                 .usePlaintext()
                 .build();
 
@@ -38,7 +42,7 @@ public class EmergencyGrpcClient {
 
             Ack ack = blockingStub.sendEmergencyAlert(alert);
 
-            // garder copie simple -> IncidentDto (pour sérialisation JSON côté orchestrateur)
+            // Store simple copy -> IncidentDto (for JSON serialization in Orchestrator)
             storedAlerts.add(new IncidentDto(
                     alert.getAlertId(),
                     alert.getZone(),
@@ -49,6 +53,7 @@ public class EmergencyGrpcClient {
 
             return ack;
         } catch (Exception e) {
+            System.err.println("gRPC Connection Error: " + e.getMessage());
             return Ack.newBuilder()
                     .setStatus("ERROR")
                     .setMessage("gRPC unavailable: " + e.getMessage())
@@ -66,9 +71,9 @@ public class EmergencyGrpcClient {
                     .setTimestamp(System.currentTimeMillis())
                     .build();
 
-            Ack ack = blockingStub.sendEmergencyAlert(alert);
-            return ack;
+            return blockingStub.sendEmergencyAlert(alert);
         } catch (Exception e) {
+            System.err.println("gRPC Inquiry Error: " + e.getMessage());
             return Ack.newBuilder()
                     .setStatus("ERROR")
                     .setMessage("Emergency service offline")

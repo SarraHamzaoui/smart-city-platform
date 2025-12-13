@@ -14,8 +14,11 @@ public class CitizenGraphqlClient {
     private final WebClient webClient;
 
     public CitizenGraphqlClient() {
+        // Dynamic host configuration: check env var, default to localhost
+        String host = System.getenv("CITIZEN_HOST") != null ? System.getenv("CITIZEN_HOST") : "localhost";
+
         this.webClient = WebClient.builder()
-                .baseUrl("http://localhost:8083")
+                .baseUrl("http://" + host + ":8083")
                 .build();
     }
 
@@ -40,15 +43,20 @@ public class CitizenGraphqlClient {
         body.put("query", query);
         body.put("variables", variables);
 
-        GraphqlResponse response = webClient.post()
-                .uri("/citizen/graphql")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(GraphqlResponse.class)
-                .block();
+        try {
+            GraphqlResponse response = webClient.post()
+                    .uri("/citizen/graphql")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(GraphqlResponse.class)
+                    .block();
 
-        return (response != null && response.getData() != null)
-                ? response.getData().getZoneOverview()
-                : null;
+            return (response != null && response.getData() != null)
+                    ? response.getData().getZoneOverview()
+                    : null;
+        } catch (Exception e) {
+            System.err.println("Error calling GraphQL Service: " + e.getMessage());
+            return null;
+        }
     }
 }

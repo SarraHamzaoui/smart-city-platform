@@ -15,9 +15,15 @@ public class AirSoapClient {
     private AirQualityService getPort() {
         if (port == null) {
             try {
-                URL wsdl = new URL("http://localhost:8082/air-quality?wsdl");
+                // Dynamic host configuration for Docker vs Local
+                String host = System.getenv("AIR_SOAP_HOST") != null ? System.getenv("AIR_SOAP_HOST") : "localhost";
+                URL wsdl = new URL("http://" + host + ":8082/air-quality?wsdl");
+
                 port = new AirQualityServiceImplService(wsdl).getAirQualityServiceImplPort();
             } catch (Exception e) {
+                // Print error to logs so you know if connection failed
+                System.err.println("Error connecting to SOAP Service: " + e.getMessage());
+                e.printStackTrace();
                 return null;
             }
         }
@@ -29,6 +35,7 @@ public class AirSoapClient {
             AirQualityService service = getPort();
             return (service != null) ? service.getAirQualityByZone(zone) : fallback(zone);
         } catch (Exception e) {
+            System.err.println("Error calling SOAP method: " + e.getMessage());
             return fallback(zone);
         }
     }

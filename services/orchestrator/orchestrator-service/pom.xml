@@ -23,7 +23,6 @@
 
     <dependencies>
 
-        <!-- REST / WebClient -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -34,23 +33,18 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- ========== SOAP CLIENT (JAX-WS + JAXB, Java 17) ========== -->
-
-        <!-- Runtime + impl JAX-WS (contient javax.xml.ws.*) -->
         <dependency>
             <groupId>com.sun.xml.ws</groupId>
             <artifactId>jaxws-rt</artifactId>
             <version>2.3.2</version>
         </dependency>
 
-        <!-- API javax.xml.ws -->
         <dependency>
             <groupId>javax.xml.ws</groupId>
             <artifactId>jaxws-api</artifactId>
             <version>2.3.1</version>
         </dependency>
 
-        <!-- JAXB API + runtime -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -63,44 +57,36 @@
             <version>2.3.1</version>
         </dependency>
 
-        <!-- javax annotations -->
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
             <version>1.3.2</version>
         </dependency>
 
-        <!-- javax.jws (au cas où) -->
         <dependency>
             <groupId>javax.jws</groupId>
             <artifactId>javax.jws-api</artifactId>
             <version>1.1</version>
         </dependency>
 
-        <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-
-        <!-- Implémentation SAAJ pour javax.xml.soap -->
         <dependency>
             <groupId>com.sun.xml.messaging.saaj</groupId>
             <artifactId>saaj-impl</artifactId>
             <version>1.5.1</version>
         </dependency>
 
-
-        <!-- Jar de ton microservice gRPC (contient les stubs générés) -->
         <dependency>
             <groupId>com.smartcity</groupId>
             <artifactId>emergency-grpc</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
-        <!-- gRPC client runtime -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
@@ -119,8 +105,6 @@
             <version>1.63.0</version>
         </dependency>
 
-
-
     </dependencies>
 
     <build>
@@ -129,28 +113,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-            <!-- Génération du client SOAP à partir du WSDL -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxws-maven-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <wsdlUrls>
-                        <wsdlUrl>http://localhost:8082/air-quality?wsdl</wsdlUrl>
-                    </wsdlUrls>
-                    <packageName>com.smartcity.orchestrator.soapclient</packageName>
-                    <!-- place directement les fichiers générés dans src/main/java -->
-                    <sourceDestDir>src/main/java</sourceDestDir>
-                </configuration>
             </plugin>
 
             <plugin>
