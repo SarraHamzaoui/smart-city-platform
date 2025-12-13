@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.0'
+	id 'org.springframework.boot' version '3.2.2' // <--- Version correcte
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -19,14 +19,18 @@ repositories {
 }
 
 dependencies {
+	// Vos dépendances principales (Celle-ci est la plus importante que vous avez corrigée)
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-graphql'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+	// Outils de développement
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Pour les tests (Standard Spring Boot)
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-graphql-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-
 tasks.named('test') {
 	useJUnitPlatform()
 }

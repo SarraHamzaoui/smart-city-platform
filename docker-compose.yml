@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # 1. SOAP Service
+  air-soap-service:
+    build: ./services/air-soap/air-soap
+    container_name: air-soap-service
+    ports:
+      - "8082:8082"
+    networks:
+      - city-network
+
+  # 2. REST Service
+  mobility-service:
+    build: ./services/mobility-rest/mobility-rest
+    container_name: mobility-service
+    ports:
+      - "8081:8081"
+    networks:
+      - city-network
+
+  # 3. GraphQL Service
+  citizen-service:
+    build: ./services/citizen-graphql/citizen-graphql
+    container_name: citizen-service
+    ports:
+      - "8083:8083"
+    networks:
+      - city-network
+
+  # 4. gRPC Service
+  emergency-service:
+    build: ./services/emergency-grpc
+    container_name: emergency-service
+    ports:
+      - "9090:9090"
+    networks:
+      - city-network
+
+  # 5. Orchestrator Service
+    # 5. Orchestrator Service
+  orchestrator-service:
+    build:
+      context: .   # IMPORTANT : On se place à la racine du projet (D:\SOC\smart-city-platform)
+      dockerfile: services/orchestrator/orchestrator-service/Dockerfile
+    container_name: orchestrator-service
+    ports:
+      - "8084:8084"
+    environment:
+       - AIR_SOAP_HOST=air-soap-service
+       - CITIZEN_HOST=citizen-service
+       - EMERGENCY_HOST=emergency-service
+       - MOBILITY_HOST=mobility-service
+    depends_on:
+      - air-soap-service
+      - citizen-service
+      - emergency-service
+    networks:
+      - city-network
+
+  # 6. Gateway Service
+  gateway-service:
+    build: ./gateway/city-gateway
+    container_name: gateway-service
+    ports:
+      - "8087:8087"
+    environment:
+      # --- Route 0 : Vers l'Orchestrateur ---
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_ID=orchestrator-route
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://orchestrator-service:8084
+      # Cette ligne manquait ! Elle dit "Intercepte tout ce qui commence par /orchestrator/**"
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0=Path=/orchestrator/**
+
+      # --- Route 1 : Vers Mobility ---
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_ID=mobility-route
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://mobility-service:8081
+      # Cette ligne manquait aussi !
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/mobility/**
+    depends_on:
+      - orchestrator-service
+      - mobility-service
+    networks:
+      - city-network
+
+    # ADD THIS NEW SERVICE
+  smart-city-ui:
+    build: ./web-client/smart-city-ui
+    container_name: smart-city-ui
+    ports:
+      - "3000:80"  # Maps Windows port 3000 to Nginx port 80
+    depends_on:
+      - gateway-service
+    networks:
+      - city-network
+
+networks:
+  city-network:
+    driver: bridge
